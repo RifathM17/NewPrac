@@ -1,0 +1,58 @@
+package com.example.mindsprint.service;
+
+import com.example.mindsprint.dto.*;
+import com.example.mindsprint.model.User;
+import com.example.mindsprint.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class AuthService {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    public void register(RegisterRequest registerRequest) {
+        User user = new User();
+        user.setName(registerRequest.getName());
+        user.setEmail(registerRequest.getEmail());
+        user.setPassword(registerRequest.getPassword()); // Note: Plain text password, not secure
+        userRepository.save(user);
+    }
+
+    public String login(LoginRequest loginRequest) {
+        User user = userRepository.findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        if (user.getPassword().equals(loginRequest.getPassword())) { // Plain text password check, not secure
+            // Simulate generating a token (in a real scenario, you would generate a JWT token or similar)
+            return "dummy-token";
+        } else {
+            throw new RuntimeException("Invalid credentials");
+        }
+    }
+
+    public void forgotPassword(ForgotPasswordRequest forgotPasswordRequest) {
+        // Implement logic for sending a password reset email (not implemented here for simplicity)
+    }
+
+    public void resetPassword(ResetPasswordRequest resetPasswordRequest) {
+        User user = userRepository.findByResetToken(resetPasswordRequest.getToken())
+                .orElseThrow(() -> new RuntimeException("Invalid token"));
+        user.setPassword(resetPasswordRequest.getPassword()); // Note: Plain text password, not secure
+        user.setResetToken(null);
+        userRepository.save(user);
+    }
+
+    public void changePassword(ChangePasswordRequest changePasswordRequest) {
+        User user = userRepository.findByEmail(changePasswordRequest.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.getPassword().equals(changePasswordRequest.getOldPassword())) { // Plain text password check, not secure
+            user.setPassword(changePasswordRequest.getNewPassword()); // Note: Plain text password, not secure
+            userRepository.save(user);
+        } else {
+            throw new RuntimeException("Old password is incorrect");
+        }
+    }
+}
